@@ -1,5 +1,4 @@
 import { readFileSync } from "fs";
-import { exit } from "process";
 var readlineSync = require('readline-sync');
 const chalk = require('chalk');
 
@@ -12,7 +11,8 @@ class Game {
 	iaActualArray: Array<number> = []
 
 	game() {
-		let gameRaw: string = readFileSync('./data/game.map', 'utf8');
+		let map: string = readlineSync.question('Choose your map 1/2/3 :');
+		let gameRaw: string = readFileSync(`./data/game${map}.map`, 'utf8');
 		let gameLine: string[] = gameRaw.split('\n');
 
 		let y: number = -1;
@@ -85,18 +85,19 @@ class Game {
 		return count;
 	}
 	countMatchesAll(): number {
-	let count: number = 0
-	Object.entries(this.gamePosition).forEach(obj => {
-		if (obj[1].value == '|') {
-			count++
-		}
-	});
-	return count;
-}
+		let count: number = 0
+		Object.entries(this.gamePosition).forEach(obj => {
+			if (obj[1].value == '|') {
+				count++
+			}
+		});
+		return count;
+	}
 }
 
 function startGame() {
 	log(chalk.yellow('Welcome to pp-ailumette game !'))
+	let diff: string = readlineSync.question('Choose your difficulty 1/2 :');
 	let game = new Game();
 	game.game()
 	game.show()
@@ -104,7 +105,11 @@ function startGame() {
 	while (game.countMatchesAll() >= 0) {
 		player(game)
 		game.show()
-		trueIA(game)
+		if (diff == '1') {
+			theBestIACreatedEver(game)
+		} else {
+			trueIA(game)
+		}
 	}
 }
 
@@ -117,11 +122,11 @@ function player(game: Game) {
 	let matches: number
 	while (playerLineError) {
 		line = readlineSync.question('Line : ');
-		playerLineError = testLinePlayerError(line, game)
+		playerLineError = playerLError(line, game)
 	}
 	while (playerMatcheError) {
 		matches = readlineSync.question('Matches : ');
-		playerMatcheError = testMatchesPlayerError(line, matches, game)
+		playerMatcheError = PlayerMError(line, matches, game)
 	}
 	log(chalk.blue(`Player removed ${matches} match(es) from line ${line} `))
 	game.demiseMatches(matches, line)
@@ -146,6 +151,8 @@ function IAxOR(game: Game) {
 }
 
 function theBestIACreatedEver(game: Game) {
+	log(chalk.green('_________'))
+	log(chalk.green('IA\'s turn...'))
 	let chosedLine: boolean = true
 	let y: number
 	while (chosedLine) {
@@ -222,7 +229,7 @@ function trueIA(game: Game) {
 	}
 }
 
-function testLinePlayerError(line: number, game: Game) {
+function playerLError(line: number, game: Game) {
 	if (line > game.gameMaxY - 2) {
 		log('Error: this line is out of range')
 		return true
@@ -247,7 +254,7 @@ function testLinePlayerError(line: number, game: Game) {
 	}
 }
 
-function testMatchesPlayerError(line: number, matches: number, game: Game) {
+function PlayerMError(line: number, matches: number, game: Game) {
 	if (matches == 0) {
 		log('Error: you have to remove at least one match')
 		return true
