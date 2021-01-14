@@ -1,11 +1,25 @@
 import { readFileSync } from "fs";
-import { exit } from "process";
+var readlineSync = require('readline-sync');
 
+const chalk = require('chalk');
+var query = require('cli-interact');
+
+const log = console.log;
 class Game {
 	gamePosition: object = {};
 	gameSaveArray: string = "";
+}
 
-
+async function startGame() {
+	log(chalk.yellow('Welcome to pp-ailumette game !'))
+	let acutalGame = game()
+	log(chalk.blue('_________'))
+	while (countMetteAll(acutalGame) >= 1) {
+		let line = readlineSync.question('Chose your y :');
+		let matches = readlineSync.question('Chose your nb :');
+		demiseMette(acutalGame, matches, line)
+	}
+	log('finish')
 }
 
 function game() {
@@ -27,9 +41,11 @@ function game() {
 		}
 
 	}
-	demiseMette(game, 5, 4)
+	//countMetteAll(game)
+	return game;
 
 }
+
 
 
 function demiseMette(game: Game, nbDemise: number, y: number) {
@@ -43,7 +59,6 @@ function demiseMette(game: Game, nbDemise: number, y: number) {
 
 	while (x !== 9) {
 		if (game.gamePosition[`${x}:${y}`].value == '|') {
-			console.log(nbDemise, count);
 			if (count != nbDemise) {
 				count++
 				game.gamePosition[`${x}:${y}`].value = ' '
@@ -53,7 +68,7 @@ function demiseMette(game: Game, nbDemise: number, y: number) {
 		}
 		x++
 	}
-	console.log(show(game));
+	show(game);
 
 }
 
@@ -70,7 +85,7 @@ function show(game: Game) {
 		game.gameSaveArray = game.gameSaveArray + game.gamePosition[obj]['value']
 		oldY = Y
 	}
-	console.log(game.gameSaveArray)
+	log(chalk.red(game.gameSaveArray))
 	//let a = countMette(game, 3);
 
 }
@@ -86,7 +101,15 @@ function countMette(game: Game, y: number): number {
 	}
 	return count;
 }
+function countMetteAll(game: Game): number {
+	let count: number = 0
+	Object.entries(game.gamePosition).forEach(obj => {
+		if (obj[1].value == '|') {
+			count++
+		}
+	});
+	return count;
+}
 
-
-game();
+startGame();
 

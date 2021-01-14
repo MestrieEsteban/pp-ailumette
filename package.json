@@ -12,9 +12,7 @@
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "prettier-watch": "onchange 'src/**/*.ts' -- prettier --write {{changed}}"
   },
-  "husky": {
-
-  },
+  "husky": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -43,5 +41,9 @@
     "rimraf": "^3.0.0",
     "ts-node": "^8.3.0",
     "typescript": "^3.6.2"
+  },
+  "dependencies": {
+    "cli-interact": "^0.1.9",
+    "prompt-sync": "^4.2.0"
   }
 }
