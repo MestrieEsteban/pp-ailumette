@@ -1,4 +1,5 @@
 import { readFileSync } from "fs";
+import { exit } from "process";
 
 class Game {
 	gamePosition: object = {};
@@ -8,8 +9,8 @@ class Game {
 }
 
 function game() {
-	let gameRaw:string = readFileSync('./data/game.map', 'utf8');
-	let gameLine:string[] = gameRaw.split('\n');
+	let gameRaw: string = readFileSync('./data/game.map', 'utf8');
+	let gameLine: string[] = gameRaw.split('\n');
 
 	let game = new Game();
 	let y: number = -1;
@@ -19,18 +20,45 @@ function game() {
 		if (!line) { break; }
 		for (let value of line.split('')) {
 			x++;
-			let position:string = `${x}:${y}`;
+			let position: string = `${x}:${y}`;
 			game.gamePosition[position] = {
 				value: value
 			}
 		}
-		
+
 	}
-	show(game)
+	demiseMette(game, 5, 4)
+
+}
+
+
+function demiseMette(game: Game, nbDemise: number, y: number) {
+	if (countMette(game, y) < nbDemise) {
+		console.log('error');
+		return;
+	}
+
+	let x: number = 0;
+	let count: number = 0;
+
+	while (x !== 9) {
+		if (game.gamePosition[`${x}:${y}`].value == '|') {
+			console.log(nbDemise, count);
+			if (count != nbDemise) {
+				count++
+				game.gamePosition[`${x}:${y}`].value = ' '
+			} else {
+				game.gamePosition[`${x}:${y}`].value = '|'
+			}
+		}
+		x++
+	}
+	console.log(show(game));
 
 }
 
 function show(game: Game) {
+
 	let oldY = 0
 	for (let obj in game.gamePosition) {
 		let XandY = obj.split(":");
@@ -42,15 +70,15 @@ function show(game: Game) {
 		game.gameSaveArray = game.gameSaveArray + game.gamePosition[obj]['value']
 		oldY = Y
 	}
-	//console.log(game.gameSaveArray)
+	console.log(game.gameSaveArray)
 	//let a = countMette(game, 3);
 
 }
 
 function countMette(game: Game, y: number): number {
 	let x: number = 0;
-	let count:number = 0
-	while (x !== 9) {		
+	let count: number = 0
+	while (x !== 9) {
 		if (game.gamePosition[`${x}:${y}`].value == '|') {
 			count++
 		}
@@ -58,6 +86,7 @@ function countMette(game: Game, y: number): number {
 	}
 	return count;
 }
+
 
 game();
 
