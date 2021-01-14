@@ -1,9 +1,7 @@
 import { readFileSync } from "fs";
 import { exit } from "process";
 var readlineSync = require('readline-sync');
-
 const chalk = require('chalk');
-var query = require('cli-interact');
 
 const log = console.log;
 class Game {
@@ -37,28 +35,80 @@ class Game {
 			}
 
 		}
-		//countMetteAll(game)
 		return this;
-
 	}
+	show() {
+		let oldY = 0
+		this.gameSaveArray = ""
+		for (let obj in this.gamePosition) {
+			let XandY = obj.split(":");
+			let X = parseInt(XandY[0], 10)
+			let Y = parseInt(XandY[1], 10)
+			if (Y > oldY) {
+				this.gameSaveArray = this.gameSaveArray + '\n'
+			}
+			this.gameSaveArray = this.gameSaveArray + this.gamePosition[obj]['value']
+			oldY = Y
+		}
+		log(chalk.red.bold(this.gameSaveArray))
+	}
+	demiseMatches(nbDemise: number, y: number) {
+		if (this.countMatches(y) < nbDemise) {
+			console.log('error');
+			return;
+		}
+
+		let x: number = 0;
+		let count: number = 0;
+
+		while (x !== this.gameMaxX) {
+			if (this.gamePosition[`${x}:${y}`].value == '|') {
+				if (count != nbDemise) {
+					count++
+					this.gamePosition[`${x}:${y}`].value = ' '
+				} else {
+					this.gamePosition[`${x}:${y}`].value = '|'
+				}
+			}
+			x++
+		}
+	}
+	countMatches(y: number): number {
+		let x: number = 0;
+		let count: number = 0
+		while (x !== this.gameMaxX) {
+			if (this.gamePosition[`${x}:${y}`].value == '|') {
+				count++
+			}
+			x++
+		}
+		return count;
+	}
+	countMatchesAll(): number {
+	let count: number = 0
+	Object.entries(this.gamePosition).forEach(obj => {
+		if (obj[1].value == '|') {
+			count++
+		}
+	});
+	return count;
+}
 }
 
-async function startGame() {
+function startGame() {
 	log(chalk.yellow('Welcome to pp-ailumette game !'))
-	let acutalGame = new Game();
-	acutalGame.game()
-
-	show(acutalGame)
-	arrayMetteAll(acutalGame)
-	while (countMetteAll(acutalGame) >= 0) {
-		player(acutalGame)
-		show(acutalGame)
-		trueIA(acutalGame)
+	let game = new Game();
+	game.game()
+	game.show()
+	arrayMetteAll(game)
+	while (game.countMatchesAll() >= 0) {
+		player(game)
+		game.show()
+		trueIA(game)
 	}
-	log('finish')
 }
 
-function player(acutalGame: Game) {
+function player(game: Game) {
 	log(chalk.blue('_________'))
 	log(chalk.blue('Your turn'))
 	let playerLineError: boolean = true
@@ -67,86 +117,26 @@ function player(acutalGame: Game) {
 	let matches: number
 	while (playerLineError) {
 		line = readlineSync.question('Line : ');
-		playerLineError = testLinePlayerError(line, acutalGame)
+		playerLineError = testLinePlayerError(line, game)
 	}
 	while (playerMatcheError) {
 		matches = readlineSync.question('Matches : ');
-		playerMatcheError = testMatchesPlayerError(line, matches, acutalGame)
+		playerMatcheError = testMatchesPlayerError(line, matches, game)
 	}
 	log(chalk.blue(`Player removed ${matches} match(es) from line ${line} `))
-	demiseMette(acutalGame, matches, line)
-	if (countMetteAll(acutalGame) == 0) {
+	game.demiseMatches(matches, line)
+	if (game.countMatchesAll() == 0) {
 		log('You lost, too bad..')
+		game.show()
 		process.exit(0)
 	}
 }
 
-function demiseMette(game: Game, nbDemise: number, y: number) {
-	if (countMette(game, y) < nbDemise) {
-		console.log('error');
-		return;
-	}
-
-	let x: number = 0;
-	let count: number = 0;
-
-	while (x !== game.gameMaxX) {
-		if (game.gamePosition[`${x}:${y}`].value == '|') {
-			if (count != nbDemise) {
-				count++
-				game.gamePosition[`${x}:${y}`].value = ' '
-			} else {
-				game.gamePosition[`${x}:${y}`].value = '|'
-			}
-		}
-		x++
-	}
-}
-
-async function show(game: Game) {
-
-	let oldY = 0
-	game.gameSaveArray = ""
-	for (let obj in game.gamePosition) {
-		let XandY = obj.split(":");
-		let X = parseInt(XandY[0], 10)
-		let Y = parseInt(XandY[1], 10)
-		if (Y > oldY) {
-			game.gameSaveArray = game.gameSaveArray + '\n'
-		}
-		game.gameSaveArray = game.gameSaveArray + game.gamePosition[obj]['value']
-		oldY = Y
-	}
-	log(chalk.red.bold(game.gameSaveArray))
-	//let a = countMette(game, 3);
-
-}
-
-function countMette(game: Game, y: number): number {
-	let x: number = 0;
-	let count: number = 0
-	while (x !== game.gameMaxX) {
-		if (game.gamePosition[`${x}:${y}`].value == '|') {
-			count++
-		}
-		x++
-	}
-	return count;
-}
-function countMetteAll(game: Game): number {
-	let count: number = 0
-	Object.entries(game.gamePosition).forEach(obj => {
-		if (obj[1].value == '|') {
-			count++
-		}
-	});
-	return count;
-}
 function arrayMetteAll(game: Game) {
 	let count: number = 0
 	game.iaActualArray = []
 	for (let index = 1; index < game.gameMaxY - 1; index++) {
-		game.iaActualArray.push(countMette(game, index))
+		game.iaActualArray.push(game.countMatches(index))
 
 	}
 }
@@ -160,28 +150,28 @@ function theBestIACreatedEver(game: Game) {
 	let y: number
 	while (chosedLine) {
 		y = Math.floor(Math.random() * ((game.gameMaxY - 2) - 1 + 1) + 1)
-		if (countMette(game, y) > 0) {
+		if (game.countMatches(y) > 0) {
 			chosedLine = false
 		}
 	}
 	let nb: number
 	let chosedNb: boolean = true
 	while (chosedNb) {
-		nb = Math.floor(Math.random() * (countMette(game, y) - 0 + 1) + 0)
+		nb = Math.floor(Math.random() * (game.countMatches(y) - 0 + 1) + 0)
 		if (nb > 0) {
 			chosedNb = false
 		}
 	}
 
 	log(chalk.green(`IA removed ${nb} match(es) from line ${y} `))
-	demiseMette(game, nb, y)
-	show(game)
+	game.demiseMatches(nb, y)
+	game.show()
 }
 
 function trueIA(game: Game) {
 	log(chalk.green('_________'))
 	log(chalk.green('IA\'s turn...'))
-	if (countMetteAll(game) == 1) {
+	if (game.countMatchesAll() == 1) {
 		theBestIACreatedEver(game)
 		log('I lost.. snif.. but I’ll get you next time!!')
 		process.exit(0)
@@ -194,40 +184,41 @@ function trueIA(game: Game) {
 
 	while (chosedLine) {
 		y = Math.floor(Math.random() * ((game.gameMaxY - 2) - 1 + 1) + 1)
-		if (countMette(game, y) > 0) {
+		if (game.countMatches(y) > 0) {
 			chosedLine = false
 		}
 	}
 
 	if (IAxOR(game) == 0) {
-		while (countMette(game, y) == 0) {
+		while (game.countMatches(y) == 0) {
 			y = (y + 1) % (game.gameMaxY - 2)
 		}
 		log(chalk.green(`IA removed 1 match(es) from line ${y}`))
-		demiseMette(game, 1, y)
+		game.demiseMatches(1, y)
+		game.show()
 	} else {
-		while (countMette(game, y) != 0) {
+		while (game.countMatches(y) != 0) {
 			y = (y + 1) % (game.gameMaxY - 2)
-			while (countMette(game, y) == 0) {
+			while (game.countMatches(y) == 0) {
 				y = (y + 1) % (game.gameMaxY - 2)
 			}
-			v = countMette(game, y)
-			while (IAxOR(game) != 0 && countMette(game, y) > 0 && countMetteAll(game) > 1) {
-				if (countMetteAll(game) !== 1) {
-					demiseMette(game, 1, y)
+			v = game.countMatches(y)
+			while (IAxOR(game) != 0 && game.countMatches(y) > 0 && game.countMatchesAll() > 1) {
+				if (game.countMatchesAll() !== 1) {
+					game.demiseMatches(1, y)
 				}
 			}
 			if (IAxOR(game) != 0) {
 				game.gamePosition = oldGamePosition
 			}
-			if (countMetteAll(game) == 1) {
-				show(game)
+			if (game.countMatchesAll() == 1) {
+				game.show()
 				log('You can play but i have already won :D')
 				return
 			}
 		}
 		log(chalk.green(`IA removed ${v} match(es) from line ${y}`))
-		show(game)
+		game.show()
 	}
 }
 
@@ -242,6 +233,10 @@ function testLinePlayerError(line: number, game: Game) {
 	}
 	if (line < 0) {
 		log('Error: invalid input (positive number expected)')
+		return true
+	}
+	if (game.countMatches(line) == 0) {
+		log('Error: no merche in this line')
 		return true
 	}
 	if (line > 0 && line < game.gameMaxY - 1) {
@@ -261,11 +256,11 @@ function testMatchesPlayerError(line: number, matches: number, game: Game) {
 		log('Error: invalid input (positive number expected)')
 		return true
 	}
-	if (matches - 1 > countMette(game, line)) {
+	if (matches - 1 > game.countMatches(line)) {
 		log('Error: not enough matches on this line')
 		return true
 	}
-	if (matches > 0 && matches - 1 < countMette(game, line)) {
+	if (matches > 0 && matches - 1 < game.countMatches(line)) {
 		return false
 	} else {
 		log('Error: invalid input (positive number expected)')
