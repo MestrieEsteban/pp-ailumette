@@ -185,6 +185,7 @@ function theBestIACreatedEver(game: Game) {
 	}
 }
 
+//Inspiration de https://interstices.info/strategies-magiques-au-pays-de-nim/
 function trueIA(game: Game) {
 	if (game.difficulty == '1') {
 		theBestIACreatedEver(game)
@@ -202,6 +203,7 @@ function trueIA(game: Game) {
 		let y: number
 		let v: number = 0
 
+		//Ligne au hasard pour que l'ago joue différemment à chaque fois
 		while (chosedLine) {
 			y = Math.floor(Math.random() * ((game.gameMaxY - 2) - 1 + 1) + 1)
 			if (game.countMatches(y) > 0) {
@@ -209,11 +211,13 @@ function trueIA(game: Game) {
 			}
 		}
 
+		//Permets de déterminer si l'ago est en position gagnante ou non
 		if (IAxOR(game) == 0) {
 			while (game.countMatches(y) == 0) {
 				y = (y + 1) % (game.gameMaxY - 2)
 			}
 			log(chalk.green(`IA removed 1 match(es) from line ${y}`))
+			//Si je suis en position perdante je retire 1 en espérant que le joueur fasse une erreur
 			game.demiseMatches(1, y)
 			game.show()
 		} else {
