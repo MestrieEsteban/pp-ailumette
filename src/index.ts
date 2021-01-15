@@ -9,9 +9,10 @@ class Game {
 	gameMaxY: number = 0;
 	gameMaxX: number = 0;
 	iaActualArray: Array<number> = []
+	difficulty: string = '1'
 
 	game() {
-		let map: string = readlineSync.question('Choose your map 1/2/3 :');
+		let map: string = readlineSync.question(chalk.yellow('Choose your map 1/2/3 :'));
 		let gameRaw: string = readFileSync(`./data/game${map}.map`, 'utf8');
 		let gameLine: string[] = gameRaw.split('\n');
 
@@ -97,18 +98,21 @@ class Game {
 
 function startGame() {
 	log(chalk.yellow('Welcome to pp-ailumette game !'))
-	let diff: string = readlineSync.question('Choose your difficulty 1/2 :');
 	let game = new Game();
+	game.difficulty = readlineSync.question(chalk.yellow('Choose your difficulty 1/2 :'));
+	let start: string = readlineSync.question(chalk.yellow('Do you want to start ? y/n:'));
 	game.game()
 	game.show()
 	arrayMetteAll(game)
 	while (game.countMatchesAll() >= 0) {
-		player(game)
-		game.show()
-		if (diff == '1') {
-			theBestIACreatedEver(game)
+		if (start == 'y') {
+			player(game)
+			game.show()
+			trueIA(game)
 		} else {
 			trueIA(game)
+			player(game)
+			game.show()
 		}
 	}
 }
@@ -120,13 +124,15 @@ function player(game: Game) {
 	let playerMatcheError: boolean = true
 	let line: number
 	let matches: number
+	while (playerMatcheError) {
 	while (playerLineError) {
 		line = readlineSync.question('Line : ');
 		playerLineError = playerLError(line, game)
 	}
-	while (playerMatcheError) {
 		matches = readlineSync.question('Matches : ');
 		playerMatcheError = PlayerMError(line, matches, game)
+		playerLineError   = playerMatcheError
+		
 	}
 	log(chalk.blue(`Player removed ${matches} match(es) from line ${line} `))
 	game.demiseMatches(matches, line)
@@ -180,56 +186,60 @@ function theBestIACreatedEver(game: Game) {
 }
 
 function trueIA(game: Game) {
-	log(chalk.green('_________'))
-	log(chalk.green('IA\'s turn...'))
-	if (game.countMatchesAll() == 1) {
+	if (game.difficulty == '1') {
 		theBestIACreatedEver(game)
-		log('I lost.. snif.. but I’ll get you next time!!')
-		process.exit(0)
-	}
-	arrayMetteAll(game)
-	let oldGamePosition = game.gamePosition
-	let chosedLine: boolean = true
-	let y: number
-	let v: number = 0
-
-	while (chosedLine) {
-		y = Math.floor(Math.random() * ((game.gameMaxY - 2) - 1 + 1) + 1)
-		if (game.countMatches(y) > 0) {
-			chosedLine = false
-		}
-	}
-
-	if (IAxOR(game) == 0) {
-		while (game.countMatches(y) == 0) {
-			y = (y + 1) % (game.gameMaxY - 2)
-		}
-		log(chalk.green(`IA removed 1 match(es) from line ${y}`))
-		game.demiseMatches(1, y)
-		game.show()
 	} else {
-		while (game.countMatches(y) != 0) {
-			y = (y + 1) % (game.gameMaxY - 2)
+		log(chalk.green('_________'))
+		log(chalk.green('IA\'s turn...'))
+		if (game.countMatchesAll() == 1) {
+			theBestIACreatedEver(game)
+			log('I lost.. snif.. but I’ll get you next time!!')
+			process.exit(0)
+		}
+		arrayMetteAll(game)
+		let oldGamePosition = game.gamePosition
+		let chosedLine: boolean = true
+		let y: number
+		let v: number = 0
+
+		while (chosedLine) {
+			y = Math.floor(Math.random() * ((game.gameMaxY - 2) - 1 + 1) + 1)
+			if (game.countMatches(y) > 0) {
+				chosedLine = false
+			}
+		}
+
+		if (IAxOR(game) == 0) {
 			while (game.countMatches(y) == 0) {
 				y = (y + 1) % (game.gameMaxY - 2)
 			}
-			v = game.countMatches(y)
-			while (IAxOR(game) != 0 && game.countMatches(y) > 0 && game.countMatchesAll() > 1) {
-				if (game.countMatchesAll() !== 1) {
-					game.demiseMatches(1, y)
+			log(chalk.green(`IA removed 1 match(es) from line ${y}`))
+			game.demiseMatches(1, y)
+			game.show()
+		} else {
+			while (game.countMatches(y) != 0) {
+				y = (y + 1) % (game.gameMaxY - 2)
+				while (game.countMatches(y) == 0) {
+					y = (y + 1) % (game.gameMaxY - 2)
+				}
+				v = game.countMatches(y)
+				while (IAxOR(game) != 0 && game.countMatches(y) > 0 && game.countMatchesAll() > 1) {
+					if (game.countMatchesAll() !== 1) {
+						game.demiseMatches(1, y)
+					}
+				}
+				if (IAxOR(game) != 0) {
+					game.gamePosition = oldGamePosition
+				}
+				if (game.countMatchesAll() == 1) {
+					game.show()
+					log('You can play but i have already won :D')
+					return
 				}
 			}
-			if (IAxOR(game) != 0) {
-				game.gamePosition = oldGamePosition
-			}
-			if (game.countMatchesAll() == 1) {
-				game.show()
-				log('You can play but i have already won :D')
-				return
-			}
+			log(chalk.green(`IA removed ${v} match(es) from line ${y}`))
+			game.show()
 		}
-		log(chalk.green(`IA removed ${v} match(es) from line ${y}`))
-		game.show()
 	}
 }
 
