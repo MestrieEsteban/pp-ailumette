@@ -173,6 +173,10 @@ function theBestIACreatedEver(game: Game) {
 	log(chalk.green(`IA removed ${nb} match(es) from line ${y} `))
 	game.demiseMatches(nb, y)
 	game.show()
+	if (game.countMatchesAll() == 0) {
+		log('I lost.. snif.. but I’ll get you next time!!')
+		process.exit(0)
+	}
 }
 
 function trueIA(game: Game) {
