@@ -100,7 +100,7 @@ function startGame() {
 	log(chalk.yellow('Welcome to pp-ailumette game !'))
 	let game = new Game();
 	game.difficulty = readlineSync.question(chalk.yellow('Choose your difficulty 1/2 :'));
-	let start: string = readlineSync.question(chalk.yellow('Do you want to start ? y/n:'));
+	let start: string = readlineSync.question(chalk.yellow('Do you want to start ? y/n (y : you start, n: IA start):'));
 	game.game()
 	game.show()
 	arrayMetteAll(game)
